@@ -1,0 +1,399 @@
+---
+title: "Google Capstone Project - Cyclistic Bike-share"
+author: "Subhash H Jayanna"
+date: "1/3/2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+Welcome to the Cyclistic bike-share analysis case study! This is a capstone case studies conducted for my Google Data Analytics Professional Certificate studies. In this case study, I will be assuming the role of a data analyst at a fictional bike-share company, "Cyclistic". This bike sharing company is located in Chicago. The director of marketing, Lily Moreno, believes the company's future success depends on maximizing the number of annual memberships. Although this company is fictional, this is real data collected between August 2020 -- July 2021 from a bike share program in Chicago. In order to provide my recommendations to my manager, I will be analyzing the data which has been made available by Motivate International Inc under this [license](https://www.divvybikes.com/data-license-agreement).
+
+## Scenario
+
+Cyclistic bike-share fictional company features over 5,800 bicycles and 600 docking stations. Cyclistic's unique selling point is their assisting riding options offering which is used by 8% of their riders. Cyclistic's finance analysts have concluded that annual members are much more profitable than casual riders. The director of marketing believes the company's future success depends on maximizing the number of annual memberships. My team is responsible for collecting, analyzing, and reporting data that helps guide Cyclistic marketing strategy. My team needs to better understand how annual members and casual riders differ, why casual riders would buy a membership, and how digital media could affect their marketing tactics. I will be attempting to answer the question "How do annual members and casual riders use Cyclistic bikes differently?" in this case study.
+
+## A. Ask Phase
+
+### Business Task
+
+Improving profitability by increasing annual-membership Riders, the most profitable user type for Cyclistic bike-share.
+
+### Key Stakeholders
+
+This project includes Lily Moreno, the director of marketing and my manager, who is responsible for the development of campaigns and initiatives to promote the bike-share program.
+
+I joined Cyclistic Marketing Analytics team about six months ago. I together with a team of analysts will be analyzing and reporting data that helps guide Cyclistic marketing strategy.
+
+Cyclistic executive team will take a decision whether to approve the program recommended by the marketing team.
+
+## B. Prepare Phase
+
+### Data Files Location
+
+The [data](https://divvy-tripdata.s3.amazonaws.com/index.html) has been made available by Motivate International Inc. under this [license](https://www.divvybikes.com/data-license-agreement). This is public data that you can use to explore how different customer types are using Cyclistic bikes.
+
+### Data Organization
+
+The data is stored in .csv format. Trip data is divided into months and I will be considering a full year worth of trip data from December 2020 till November 2021 for this case study.
+
+### Reliability and Credibility of the data
+
+Cyclistic's historical monthly trip data consists of all trips made by all users in a single month. The data has been made available by Motivate International Inc. This is public data that anyone can use to explore how different customer types are using Cyclistic bikes. The City of Chicago makes the new data available to the public every month.
+
+### Liscencing, Privacy, Security and Accessbility
+
+This data The data has been swiped to remove any personally identifiable information (PII) as data-privacy issues prohibit us from using riders' PII. Data can be accessed by anyone in the public from an s3.awscloud server using the link provided in the "Data Files Location" section above.
+
+### Data Relevancy
+
+Data contains an important attribute, "member_casual" which describes the type of rider. The riders who have annual membership are marked "members" and other riders are marked "casual". Using the data from this column, we can analyze the Trip Duration data versus Day of Month, Month of Year, Day of Week, Hour of Day, to identify contrasting patterns between member riders and casual riders.
+
+### Issues and Problems with the data
+
+There are some issues that exist in the data set. There are several trips with zero ride time which can easily be cleaned using R's tidyverse package. Cordinate data columns contain NULL values which will be removed in the Process Phase of the project. The column "rideable_type" has 3 unique entries, "classic_bike", "electric_bike", and "docked_bike". The first two types are self-explanatory but the "docked_bike" type of ambiguous.
+
+## C. Process Phase
+
+### Tools and Tech used in this case study
+
+I will analyzing one year worth of trip data which includes roughly over 5 million rows of data for 12 month. Since the size of the data is not suitable to work on using Spreadsheets software and RStudio Cloud service, I will be using RStudio Desktop and an R markdown file to compile this case study.
+
+#### Load the required packages in R
+
+```{r loading libraries, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(ggplot2)
+library(data.table)
+library(CGPfunctions)
+library(purrr)
+library(scales)
+```
+
+### Ensuring Data Integrity
+
+#### Importing previous 12 months trip data ( from December 2020 till November 2021)
+
+Run the code snippet below to load data from all 12 months.
+
+```{r loading data files, message=FALSE, warning=FALSE, include=FALSE}
+df1 <- read_csv("Data/202012-divvy-tripdata.csv")
+df2 <- read_csv("Data/202101-divvy-tripdata.csv")
+df3<- read_csv("Data/202102-divvy-tripdata.csv")
+df4 <- read_csv("Data/202103-divvy-tripdata.csv")
+df5 <- read_csv("Data/202104-divvy-tripdata.csv")
+df6 <- read_csv("Data/202105-divvy-tripdata.csv")
+df7 <- read_csv("Data/202106-divvy-tripdata.csv")
+df8 <- read_csv("Data/202107-divvy-tripdata.csv")
+df9 <- read_csv("Data/202108-divvy-tripdata.csv")
+df10 <- read_csv("Data/202109-divvy-tripdata.csv")
+df11 <- read_csv("Data/202110-divvy-tripdata.csv")
+df12 <- read_csv("Data/202111-divvy-tripdata.csv")
+```
+
+#### Combining 12 data.frames into a single data.frame
+
+```{r include=FALSE}
+all_trips <- rbind(df1, df2, df3, df4, df5, df6, df7, df8, df9, df10, df11, df12)
+all_trips_v1 <- janitor :: remove_empty(all_trips, which = c("rows"))
+all_trips_v1 <- janitor :: remove_empty(all_trips, which = c("cols"))
+```
+
+#### Making sure combining all data frames includes all records
+
+Since data binding was done using rbind, we can compare row count of "all_trips_v1" data frame with sum of rows of all 12 months of trip data.
+
+```{r echo=TRUE}
+print(sum(nrow(df1), nrow(df2), nrow(df3), nrow(df4), nrow(df5), nrow(df6), nrow(df7), nrow(df8), nrow(df9), nrow(df10), nrow(df11), nrow(df12)))
+```
+
+Now let's see the total number of rows in the combined data frame.
+
+```{r echo=TRUE}
+print(nrow(all_trips_v1))
+```
+
+Since row count matches between "all_trips_v1" data frame and sum of all rows in all files, it is safe to declare data frame combining task is a success.
+
+#### Dealing with duplicate and missing records
+
+##### Checking for Duplicate Values.
+
+Let us see the number of distinct "ride_id" entries in the data set where each unique ride_id corresponds to a unique trip.
+
+```{r include=FALSE}
+print(nrow(distinct(all_trips_v1, ride_id, .keep_all = TRUE)))
+```
+
+As we see can see, the total number of rows in the data set "all_trips_v1" remains the same after running the distinct() function on it, so we can safely say that there aren't any duplicate "ride_id" entries.
+
+##### Checking for NULL Values in all Columns
+
+From colSums(is.na()) function, we can see that the columns "start_station_name", "start_station_id", "end_station_name", "end_station_id", "end_lat", "end_lang" all contain missing values(NA).
+
+```{r echo=TRUE}
+colSums(is.na(all_trips_v1))
+```
+
+We can clean the data by dropping all records with missing values. Let us run this code to drop all NAs from our data set.
+
+```{r include=FALSE}
+all_trips_v2 <- all_trips_v1[!(is.na(all_trips_v1$start_station_name) | is.na(all_trips_v1$start_station_id) | is.na(all_trips_v1$end_station_name) | is.na(all_trips_v1$end_station_id) | is.na(all_trips_v1$end_lat) | is.na(all_trips_v1$end_lng)), ]
+```
+
+To validate that all NA values are removed from the data set, we can run this code again:
+
+```{r echo=TRUE}
+colSums(is.na(all_trips_v2))
+```
+
+This confirms that the data is free of missing values.
+
+### Cleansing and Preparing the Data
+
+By running glimpse() function we can get a list of all column headers with their data type next to it.
+
+```{r echo=TRUE}
+glimpse(all_trips_v2)
+```
+
+As per the output, columns "started_at" and "ended_at" both are of date/time data types. Since trip duration is granulated by time of the day, in order to improve running descriptive statistics capabilities on the data set, we should break down the Date/Time columns to Date, Year, Month, Day of Week, Hour of Day. By running the code snippet below, new columns will be added to the "all_trips_v2" data set.
+
+```{r include=FALSE}
+all_trips_v2$date <- as.Date(all_trips_v2$started_at)
+all_trips_v2$month <- format(as.Date(all_trips_v2$date), "%m")
+all_trips_v2$day <- format(as.Date(all_trips_v2$date), "%d")
+all_trips_v2$year <- format(as.Date(all_trips_v2$date), "%Y")
+all_trips_v2$day_of_week <- ordered(format(as.Date(all_trips_v2$date), "%A"), levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+all_trips_v2$hour_of_day <- format(as.POSIXct(all_trips_v2$started_at), format = "%H")
+```
+
+It is very beneficial for us to have another column to denote the length of each ride. Since our data set doesn't contain that information, we can calculate the duration of each trip by subtracting "ended_at" with "started_at" columns.
+
+```{r include=FALSE}
+all_trips_v2$trip_duration <- as.numeric(difftime(all_trips_v2$ended_at,all_trips_v2$started_at,units = "mins"))
+```
+
+To verify whether these new columns are added to the data set, run the str()
+
+```{r echo=TRUE}
+str(all_trips_v2)
+```
+
+From a quick glance we can see that the newly created column, "trip_duration" contains negative trip duration time. Negative time is certainly not possible and we should remove all such occurrences to make the data set more cohesive.
+
+```{r echo=TRUE}
+all_trips_v3 <- all_trips_v2[!(all_trips_v2$trip_duration <= 0),]
+nrow(all_trips_v3)
+```
+
+Run the below code snippet to count the total number of trips with zero or negative trip duration.
+
+```{r}
+zero_trip_duration <- all_trips_v2[(all_trips_v2$trip_duration <= 0),]
+nrow(zero_trip_duration)
+```
+
+Presuming trips with less than one minute as false starts, let us identify and remove all trips with trip duration less than 1 minute(60secs).
+
+```{r include=FALSE}
+all_trips_v4 <- all_trips_v3[!(all_trips_v3$trip_duration < 1),]
+```
+
+Run the below code snippet to count the total number of trips with trip duration less than one minute.
+
+```{r echo=TRUE}
+trip_duration_less_than_1minute <- all_trips_v3[all_trips_v3$trip_duration < 1,]
+nrow(trip_duration_less_than_1minute)
+```
+
+Also assuming that trips lasting more than 24hours are marked as stolen equipment, let us remove all trips where trip duration is more than 24 hours (1,440 minutes)
+
+```{r include=FALSE}
+all_trips_v5 <- all_trips_v4[!(all_trips_v4$trip_duration > 1440),]
+```
+
+Running the code below code snippet to count the total number of trips with trip duration more than 24 hours (1,440 minutes).
+
+```{r echo=TRUE}
+trips_more_than_24hr <- all_trips_v4[( all_trips_v4$trip_duration > 1440),]
+nrow(trips_more_than_24hr)
+```
+
+In order to make sure whether all of the filters are applied to the data set, run the code snippet below:
+
+```{r echo=TRUE}
+summary(all_trips_v5$trip_duration)
+```
+
+As we can see, the shortest trip is 1 minute and the longest trip is 1439.367 minutes. So we can safely conclude that our cleaning effort on the trip duration column is a success.
+
+This concludes the cleaning phase for this case analysis. There are a total of 568 trips with zero or negative trip duration, 58,595 trips with trip duration in between 0 minutes and 1 minute and 1263 trips where the trip duration has exceeded 24hours. We initially started with 5,479,096 rows of and after all the cleaning, we are left with 4,466,038 rows of clean data ready for analysis.
+
+## D. Analyze Phase
+
+From a glance at the data set it is clear that the attributes rideable_type, member_casual, day_of_Week, hour_of \_day, month, and trip_duration are useful in answering the question at hand, How do annual members and casual riders use Cyclistic bikes differently?
+
+```{r echo=TRUE}
+head(all_trips_v5)
+```
+
+Let us consider "trip_duration" column to see how the values are spread out. By running summary() function on trip_duration column, we can see that average trip duration for all the rides is 20.280 minutes. The average trip duration for casual riders is more than double to that of member riders.
+
+```{r echo=FALSE}
+summary(all_trips_v5$trip_duration)
+```
+
+```{r echo=FALSE}
+all_trips_v5 %>%
+  group_by(member_casual) %>%
+  summarise_at(vars(trip_duration), list(average_duration = mean))
+```
+
+I have used adorn\_\* along with tabyl() function to cross-tab rideable_type and member_casual. By running the code snippet below we can clearly see that "docked_bike" is the least used rideable_type by member riders and casual riders with only 7.1% of total rides done on docked bikes. The highest used bike type is the "classic_bike" type with 71% of total rides done on classic bikes. Member riders have completed 2,459,717 rides (55.1% of total rides) where as casual riders have completed 2,006,321 rides (44.9% of total rides). Another important inference from the cross-tab is that the casual riders, out of a total of 2 million rides, 61.9% of the rides (1,240,021) done on "classic_bike" rideable_type and the least rideable_type used by casual riders is the "docked_bike" type with only 15.3% of total rides (308,958).
+
+```{r echo=FALSE}
+all_trips_v5 %>%
+  tabyl(rideable_type, member_casual) %>%
+  adorn_totals(c("row", "col")) %>%
+  adorn_percentages("all") %>%
+  adorn_pct_formatting(, digits = 1) %>%
+  adorn_ns %>%
+  knitr::kable()
+```
+
+The average trip duration times for docked_bike type is the highest with 49.5 minutes followed by classic_bike type and electric_bike type with 18.7 minutes and 16.1 minutes respectively.
+
+```{r echo=FALSE}
+all_trips_v5 %>%
+  group_by(rideable_type) %>%
+  summarise_at(vars(trip_duration), list(average_duration = mean))
+
+```
+
+The cross-tab between member_casual and day_of_week comparing average trip_duration denotes that highest average trip_duration times are coming in on Saturdays by casual riders. The lowest average trip duration times are coming in on Fridays by member riders. Similarly, casual riders are most active on Saturday with number of rides going up to almost 460,000 and least active on Friday with number of rides summing up to just above 281,000.
+
+```{r echo=FALSE}
+all_trips_v5 %>% 
+  group_by(member_casual, day_of_week) %>%
+  summarise(number_of_rides = n(), average_duration = mean(trip_duration)) %>%
+  arrange(desc(number_of_rides), desc(average_duration), day_of_week)
+```
+
+## E. Share Phase
+
+From the below viz. we can infer that both members and casual riders prefer classic_bike type. Whereas docked_bike type is the lowest used bike type by both types of riders but casual riders prefer docked bike way more than member riders.
+
+```{r echo=FALSE}
+all_trips_v5 %>%
+  ggplot(mapping = aes(x = rideable_type, fill = member_casual)) +
+           geom_bar(position = 'dodge', alpha = 0.8) +
+           scale_y_continuous(labels=comma) +
+           theme_classic() +
+           labs(title = "Ride Count by Rideable_Type split by Member_Casual", 
+                x = "Rideable_Type",y = "Ride Count")
+```
+
+The viz. below segments number of rides by day of the week split by rider type. It is clear that casual riders are most active during the days on weekends with highest number of rides coming on Saturday followed by Sunday and Friday respectively. Whereas member riders are most active on the days member riders are least active i.e. on Tuesday, Wednesday and Thursday.
+
+```{r echo=FALSE}
+all_trips_v5 %>%
+  ggplot(aes(x = day_of_week, fill = rideable_type)) +
+           geom_bar(position = 'dodge', alpha = 0.8) +
+           scale_y_continuous(labels=comma) +
+           theme_classic() +
+           labs(title = "Ride Count by Day of the Week and split by Member_Casual", 
+                x = "Day of the Week", y = "Ride Count") +
+           facet_grid(member_casual ~ .)
+           
+```
+
+The viz. below compares average trip times across the days of the week. The average trip duration for casual riders is higher than member riders on all days of the week. So, we can conclude that casual riders use Cyclistic bike-share services for longer time than member riders.
+
+```{r echo=FALSE}
+all_trips_v5 %>% 
+  group_by(day_of_week, member_casual) %>% 
+  summarise(average_duration = mean(trip_duration)) %>% 
+  arrange(day_of_week)  %>% 
+  ggplot(aes(x = day_of_week, y = average_duration, fill = member_casual)) +
+  geom_col(position = "dodge", alpha = 0.8) +
+  theme_classic() +
+  labs(title = "Average Trip Duration vs Day of the Week grouped by Member_Casual", x = "Day of the Week", y = "Average Trip Duration (mins)")
+```
+
+The plot below shows average trip duration spread over all the days of a month grouped by rider type. Lowest average trip duration for rides done by casual members is just above 25 minutes
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+all_trips_v5 %>% 
+  group_by(day, member_casual) %>%
+  summarise(average_duration = mean(trip_duration)) %>%
+  arrange(day, average_duration) %>%
+  ggplot(aes(x = day, y = average_duration, group = member_casual)) +
+  geom_point() +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Average Trip Duration by Day of the Month", x = "Day", y = "Average Trip Duration (mins)")
+```
+
+The viz. below groups number of rides by hour of the day faceted by member_casual. We can infer that there's a steady increase in the number of rides as the day goes by with 5 PM, 6 PM and 4 PM being the most active times of the day in that order for both rider types. But one distinction is that member riders when compared to casual riders, prefer to use bike-share services during the morning hours of the day, i.e 8 AM , 7 AM and 9 AM as well as evening hours.
+
+```{r echo=FALSE}
+all_trips_v5 %>%
+  ggplot(aes(x = hour_of_day, fill = rideable_type)) +
+  geom_histogram(bins = 24, stat = "count", alpha = 0.8) +
+  scale_y_continuous(labels=comma) +
+  theme_classic() +
+  facet_grid(vars(member_casual)) +
+  labs(title = "Ride Count by Hour of the Day split by Rideable_Type 
+       (Facet ~ Member_Casual)",
+       x = "Hour of the Day", y = "Ride Count")
+```
+
+The viz. below groups number of rides by Months faceted by member_casual. Both rider types are most active during the middle months of the year. Casual Riders are most active in July and Member riders are most active in August but both rider types are least active in February. Also, another inference can be made from the plot below would be that the docked_bike type is most used by casual riders in the summer months of the year. But, since we do not have an explanation regarding what constitutes as a docked bike no this insight will carry less weight.
+
+```{r echo=FALSE, warning=FALSE}
+all_trips_v5 %>%
+  ggplot(aes(x = month, fill = rideable_type)) +
+  geom_histogram(bins = 12, stat = "count", alpha = 0.8) +
+  scale_y_continuous(labels=comma) +
+  theme_classic() +
+  facet_grid(vars(member_casual)) +
+  labs(title = "Ride Count by Month split by Rideable_Type 
+       (Facet ~ Member_Casual)",
+       x = "Months", y = "Ride Count")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+all_trips_v5 %>%
+  ggplot(aes(x = trip_duration, y=member_casual, fill=member_casual))+
+  geom_boxplot()+
+  theme_classic()+
+  coord_flip()+
+  scale_fill_brewer(palette = "Paired")+
+  labs(title = "Comparitive Boxplot | Trip Duration",
+       subtitle = "by Rider Type",
+       caption = "Proudly built with RStudio",
+       x="Trip Duration\n",
+       y="\nRider Type")+
+  scale_x_continuous(limits = c(0, 100))
+```
+
+## F. Act Phase
+
+Based on my analysis, member riders have more overall trips done compared to casual riders but the later on average ride twice as long compared to member riders. Both rider types are most active during June, July, August and September months and least active during December, January and February. Number of trips done by casual riders gradually increase through out the day peaking at 5 PM and gradually tapers off as day comes to an end. Whereas member riders have a large spike in ride count at 5 PM and a short spike at 8 AM. This strongly suggests that member riders mostly use bike-sharing services during the start and end hours of a typical workday. Casual riders tend to take significantly more number of rides which are longer on average during the weekends. On the contrary, member riders' usage is concentrated on the weekdays especially during the middle the of week. Bike rider types tend to prefer Classic bikes over the other two bike types but casual riders use more significantly number of docked bikes than member riders. Given these insights, I would like to provide my top 3 recommendations, to the director of marketing and my manager, Lily Moreno.
+
+1.  Casual riders on an average ride for twice as longer compared to member riders so my first recommendation would be to introduce rewards programs to the existing annual subscription model to incentivize longer rides. A Majority of the rides done by casual riders is about 30 minutes in length, a recommendation would be to add a rewards program with the annual membership which incentivizes rides longer than 30 minutes.
+2.  Casual riders ride a lot more during the weekends compared to the weekdays. Given this insight my recommendation to the marketing department should run the promotion campaigns online during the weekdays leading up-to busier weekend days.
+3.  Along the same lines, casual riders use bike-share services the most during the summer months. My recommendation would be to set up billboards and other static poster advertisements in and around the hot-spots across the city. This would increase exposure for the annual membership program and Cyclistic bike-service in general.
+
+Further analysis can be done using the Geo-coordinates from the data set to identify hot spot across the city which has higher number of casual riders. By doing that billboard advertisements can be set-up strategically across the city to draw more exposure. Geo location data can also be used to improve bike availability around the hot-spots.
+
+If we were to have address data attached to the payment information, it would help us to split the casual riders group into natives and tourists. By identifying riders native to the city, it will allow the marketing folks to target such individual who have higher probability to sign up for annual membership when compared to tourists.
