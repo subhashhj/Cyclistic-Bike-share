@@ -1,2 +1,9 @@
 # Cyclistic-Bike-share
 This is a capstone case studies conducted for my Google Data Analytics Professional Certificate studies. In this case study, I will be assuming the role of a data analyst at a fictional bike-share company, “Cyclistic”. This bike sharing company is located in Chicago.
+
+# Introduction
+Welcome to the Cyclistic bike-share analysis case study! This is a capstone case studies conducted for my Google Data Analytics Professional Certificate studies. In this case study, I will be assuming the role of a data analyst at a fictional bike-share company, “Cyclistic”. This bike sharing company is located in Chicago. The director of marketing, Lily Moreno, believes the company’s future success depends on maximizing the number of annual memberships. Although this company is fictional, this is real data collected between August 2020 – July 2021 from a bike share program in Chicago. In order to provide my recommendations to my manager, I will be analyzing the data which has been made available by Motivate International Inc under this license.
+
+# Scenario
+Cyclistic bike-share fictional company features over 5,800 bicycles and 600 docking stations. Cyclistic’s unique selling point is their assisting riding options offering which is used by 8% of their riders. Cyclistic’s finance analysts have concluded that annual members are much more profitable than casual riders. The director of marketing believes the company’s future success depends on maximizing the number of annual memberships. My team is responsible for collecting, analyzing, and reporting data that helps guide Cyclistic marketing strategy. My team needs to better understand how annual members and casual riders differ, why casual riders would buy a membership, and how digital media could affect their marketing tactics. I will be attempting to answer the question “How do annual members and casual riders use Cyclistic bikes differently?” in this case study.
+
